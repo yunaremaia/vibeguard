@@ -1,6 +1,9 @@
+
 # VibeGuard
 
+
 Security scanner for AI-generated code. Detects common security issues in "vibe-coded" applications.
+[Changelog](CHANGELOG.md)
 
 ## Why VibeGuard?
 
