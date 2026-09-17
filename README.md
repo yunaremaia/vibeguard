@@ -77,3 +77,7 @@ jobs:
 ## License
 
 MIT
+
+## API
+
+See [docs/API.md](docs/API.md) for the Python API and CLI flags.
