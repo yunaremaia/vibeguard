@@ -1,6 +1,8 @@
 """VibeGuard CLI entry point."""
 
 import argparse
+
+from vibeguard import __version__
 import sys
 from pathlib import Path
 
@@ -38,9 +40,9 @@ def main() -> int:
         help="Minimum severity to report (default: LOW)",
     )
     parser.add_argument(
-        "--version",
+        "--version", "-V", "-v",
         action="version",
-        version="%(prog)s 0.1.0",
+        version=f"%(prog)s {__version__}",
     )
     
     args = parser.parse_args()
