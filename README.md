@@ -88,3 +88,7 @@ MIT
 | `0` | Clean / no actionable findings |
 | `1` | Findings reported (use in CI gates) |
 | `2` | Invalid arguments or unreadable input |
+
+## API
+
+See [docs/API.md](docs/API.md) for the Python API and CLI flags.
