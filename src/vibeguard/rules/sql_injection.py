@@ -5,31 +5,33 @@ from pathlib import Path
 
 from ..models import Finding, Severity
 
-# Patterns for SQL injection vulnerabilities
+MAX_LINE_LENGTH = 50_000  # 50 KB
+
+# Pre-compiled SQL injection patterns.
 SQL_INJECTION_PATTERNS = [
     # Python f-strings in SQL
     (
-        r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*f['"]""",
+        re.compile(r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*f['"]"""),
         "SQL query uses f-string formatting — vulnerable to SQL injection",
     ),
     # Python .format() in SQL
     (
-        r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"].*?\{.*?\}.*?['"]\s*\.format\s*\(""",
+        re.compile(r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"].*?\{.*?\}.*?['"]\s*\.format\s*\("""),
         "SQL query uses .format() — vulnerable to SQL injection",
     ),
     # Python % formatting in SQL
     (
-        r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"].*?%s.*?['"]\s*%\s*""",
+        re.compile(r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"].*?%s.*?['"]\s*%\s*"""),
         "SQL query uses % formatting — use parameterized queries instead",
     ),
     # JavaScript template literals in SQL
     (
-        r"""(?i)(?:query|execute|run)\s*\(\s*`[^`]*\$\{[^}]+\}[^`]*`""",
+        re.compile(r"""(?i)(?:query|execute|run)\s*\(\s*`[^`]*\$\{[^}]+\}[^`]*`"""),
         "SQL query uses template literal interpolation — vulnerable to SQL injection",
     ),
     # String concatenation in SQL
     (
-        r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"][^'"]*['"]\s*\+\s*""",
+        re.compile(r"""(?i)(?:execute|query|cursor\.execute)\s*\(\s*['"][^'"]*['"]\s*\+\s*"""),
         "SQL query uses string concatenation — vulnerable to SQL injection",
     ),
 ]
@@ -49,8 +51,11 @@ def scan_file(path: Path) -> list[Finding]:
         if stripped.startswith("#") or stripped.startswith("//"):
             continue
         
-        for pattern, message in SQL_INJECTION_PATTERNS:
-            match = re.search(pattern, line)
+        if len(line) > MAX_LINE_LENGTH:
+            line = line[:MAX_LINE_LENGTH]
+
+        for compiled, message in SQL_INJECTION_PATTERNS:
+            match = compiled.search(line)
             if match:
                 snippet = line.strip()
                 if len(snippet) > 120:

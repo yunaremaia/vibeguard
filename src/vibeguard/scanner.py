@@ -19,6 +19,9 @@ RULES = [
 ]
 
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB default cap
+
+
 def should_scan(path: Path) -> bool:
     """Check if a file should be scanned."""
     if path.suffix not in SUPPORTED_EXTENSIONS:
@@ -44,8 +47,14 @@ def scan_file(path: Path) -> list:
     return findings
 
 
-def scan_directory(target: Path) -> ScanResult:
-    """Scan a directory recursively, rejecting symlinks that escape the target."""
+def scan_directory(target: Path, max_size: int = 10 * 1024 * 1024) -> ScanResult:
+    """Scan a directory recursively, rejecting symlinks that escape the target.
+
+    Args:
+        target: File or directory to scan.
+        max_size: Maximum file size in bytes. Files larger than this are skipped
+            to prevent OOM on huge files (default 10 MB).
+    """
     result = ScanResult(target=str(target))
 
     # Resolve the target directory to prevent path traversal via symlinks
@@ -56,6 +65,12 @@ def scan_directory(target: Path) -> ScanResult:
 
     if target.is_file():
         if should_scan(target):
+            # SECURITY: skip oversized single files
+            try:
+                if target.stat().st_size > max_size:
+                    return result
+            except OSError:
+                pass
             result.files_scanned = 1
             try:
                 content = target.read_text(encoding="utf-8", errors="ignore")
@@ -81,6 +96,13 @@ def scan_directory(target: Path) -> ScanResult:
             continue
 
         if not should_scan(path):
+            continue
+
+        # SECURITY: Skip files larger than MAX_FILE_SIZE to avoid OOM
+        try:
+            if path.stat().st_size > MAX_FILE_SIZE:
+                continue
+        except OSError:
             continue
 
         result.files_scanned += 1
