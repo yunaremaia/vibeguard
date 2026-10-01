@@ -40,6 +40,21 @@ packages = ["src/vibeguard"]
 # demos and defines no test functions, so it must not be collected.
 testpaths = ["tests"]
 
+[tool.coverage.run]
+# Measure the shipped package by path. This keeps the report scoped to real
+# project code, so the repository-root fixture app is never counted.
+source = ["src/vibeguard"]
+# Line coverage, deliberately. The ratchet below is a line-coverage number and
+# must not silently change meaning if branch coverage is ever switched on.
+branch = false
+
+[tool.coverage.report]
+# Ratchet, set at the value the suite actually measures: 100% (354/354
+# statements). It is the real number, not a round figure to hide behind.
+# Never lower it to make a run pass - add a test instead.
+fail_under = 100
+show_missing = true
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"
