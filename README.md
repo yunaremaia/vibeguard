@@ -27,26 +27,34 @@ VibeGuard scans your codebase and flags these issues before they reach productio
 ## Install
 
 ```bash
-pip install vibeguard
+pip install vibeguard-py
 ```
+
+> **Note on the package name:** the short `vibeguard` name on PyPI belongs to a
+> different, unrelated project by a different author. This distribution is
+> `vibeguard-py` — a static scanner for AI-generated code. The CLI command is
+> still `vibeguard`, and the importable module is still `vibeguard`.
 
 ## Usage
 
 ```bash
 # Scan current directory
-vibeguard scan .
+vibeguard .
 
 # Scan specific directory
-vibeguard scan /path/to/project
+vibeguard /path/to/project
+
+# Scan a single file
+vibeguard app.py
 
 # Output as JSON
-vibeguard scan . --format json
+vibeguard . --format json
 
 # Output as SARIF (for GitHub Code Scanning)
-vibeguard scan . --format sarif --output results.sarif
+vibeguard . --format sarif --output results.sarif
 
 # Only show critical and high severity
-vibeguard scan . --min-severity HIGH
+vibeguard . --min-severity HIGH
 ```
 
 ## Detections
@@ -75,8 +83,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install vibeguard
-      - run: vibeguard scan . --format sarif --output vibeguard.sarif
+      - run: pip install vibeguard-py
+      - run: vibeguard . --format sarif --output vibeguard.sarif
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:

@@ -3,7 +3,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "vibeguard"
+# The PyPI *distribution* name. The short `vibeguard` name on PyPI belongs to
+# an unrelated project by a different author, so the distribution carries a
+# `-py` suffix. The repo name, the importable module and the `vibeguard`
+# console script are unchanged.
+name = "vibeguard-py"
 version = "0.1.0"
 description = "Security scanner for AI-generated code"
 readme = "README.md"
