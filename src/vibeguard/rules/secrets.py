@@ -24,9 +24,13 @@ SECRET_PATTERNS = [
         re.compile(r"""(?i)AKIA[0-9A-Z]{16}"""),
         "AWS Access Key ID detected",
     ),
-    # Generic tokens
+    # Generic tokens.
+    # The "/{" exclusions belong INSIDE the character class: the goal is to
+    # match a quoted literal, not URLs, slashes or format placeholders. Placing
+    # "/" outside the class instead compiles this to "quote, one char, 8+
+    # slashes, quote", which never matches a real credential.
     (
-        re.compile(r"""(?i)(token|secret|password|passwd|pwd)\s*[:=]\s*['"][^'"]/{8,}['"]"""),
+        re.compile(r"""(?i)(token|secret|password|passwd|pwd)\s*[:=]\s*['"][^'"/{]{8,}['"]"""),
         "Hardcoded secret/token detected",
     ),
     # Private keys
