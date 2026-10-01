@@ -1,12 +1,11 @@
 """Detection rules for AI-generated code patterns."""
 
 from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
+from enum import StrEnum
 from typing import Any
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"

@@ -1,18 +1,12 @@
 """Tests for ReDoS protection and file size limits."""
 import sys
-from pathlib import Path
 
 sys.path.insert(0, "src")
 
 import re
-import time
 import threading
 
-from vibeguard.scanner import scan_directory, should_scan
-from vibeguard.models import ScanResult
-from vibeguard.rules.secrets import scan_file as scan_secrets
-from vibeguard.rules.sql_injection import scan_file as scan_sql_injection
-
+from vibeguard.scanner import scan_directory
 
 # ---------------------------------------------------------------------------
 # ReDoS tests
@@ -50,7 +44,7 @@ def test_secrets_redos_attacks_rejected():
         (r"(?i)(token|secret|password|passwd|pwd)\s*[:=]\s*['\"][^'\"]{8,}['\"]", ""),
     ]:
         compiled = re.compile(pattern)
-        findings, timed_out = _run_with_timeout(compiled.search, (redos_payload,), timeout=2.0)
+        _, timed_out = _run_with_timeout(compiled.search, (redos_payload,), timeout=2.0)
         assert not timed_out, f"Pattern {pattern!r} hung on ReDoS payload"
 
 
@@ -63,14 +57,13 @@ def test_sql_injection_redos_attacks_rejected():
         (r"(?i)(?:execute|query|cursor\.execute)\s*\(\s*['\"][^'\"]*['\"]\s*\+\s*", ""),
     ]:
         compiled = re.compile(pattern)
-        findings, timed_out = _run_with_timeout(compiled.search, (redos_payload,), timeout=2.0)
+        _, timed_out = _run_with_timeout(compiled.search, (redos_payload,), timeout=2.0)
         assert not timed_out, f"Pattern {pattern!r} hung on ReDoS payload"
 
 
 def test_long_line_truncated_before_regex():
     """Lines longer than the max must be truncated before regex matching."""
     # The scanner must not pass a 1MB line to a regex engine.
-    from vibeguard.rules.secrets import SECRET_PATTERNS
     # Check that the module has a line-length guard (to be implemented)
     # This test will be RED until the fix is in place.
     import vibeguard.rules.secrets as secrets_mod
@@ -88,7 +81,7 @@ def test_oversized_file_skipped(tmp_path):
     assert MAX_FILE_SIZE > 0, "MAX_FILE_SIZE must be defined"
 
     big = tmp_path / "huge.py"
-    # Write just over the limit (1 MB chunk × N)
+    # Write just over the limit (1 MB chunk x N)
     chunk = "x" * (MAX_FILE_SIZE // 10)  # 10% of limit per chunk
     big.write_text("\n".join([chunk] * 11))  # slightly over limit
 
@@ -99,7 +92,6 @@ def test_oversized_file_skipped(tmp_path):
 
 def test_normal_file_still_scanned(tmp_path):
     """Files under the size limit must be scanned normally."""
-    from vibeguard.scanner import MAX_FILE_SIZE
     small = tmp_path / "small.py"
     small.write_text("print('hello')\n")
     result = scan_directory(tmp_path)

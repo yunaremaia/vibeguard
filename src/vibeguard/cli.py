@@ -1,13 +1,13 @@
 """VibeGuard CLI entry point."""
 
 import argparse
-
-from vibeguard import __version__
 import sys
 from pathlib import Path
 
+from vibeguard import __version__
+
+from .formatters import format_json, format_sarif, format_text
 from .scanner import scan_directory
-from .formatters import format_text, format_json, format_sarif
 
 
 def main() -> int:

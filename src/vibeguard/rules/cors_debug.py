@@ -63,7 +63,7 @@ def scan_file(path: Path) -> list[Finding]:
 
     for line_num, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
-        if stripped.startswith("#") or stripped.startswith("//"):
+        if stripped.startswith(("#", "//")):
             continue
         
         # Check CORS patterns

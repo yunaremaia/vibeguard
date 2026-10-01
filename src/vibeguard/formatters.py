@@ -1,7 +1,7 @@
 """Output formatters for VibeGuard."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .models import ScanResult, Severity
 
@@ -77,7 +77,7 @@ def format_json(result: ScanResult) -> str:
         },
         "scan": {
             "target": result.target,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "files_scanned": result.files_scanned,
             "lines_scanned": result.lines_scanned,
         },

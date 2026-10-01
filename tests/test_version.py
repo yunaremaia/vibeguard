@@ -1,7 +1,9 @@
 
+import sys
+
 from vibeguard import __version__
 from vibeguard.cli import main
-import sys
+
 
 def test_version_constant():
     assert __version__

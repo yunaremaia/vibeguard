@@ -33,3 +33,29 @@ Issues = "https://github.com/yunaremaia/vibeguard/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/vibeguard"]
+
+[tool.pytest.ini_options]
+# The real suite lives in tests/. The repository-root file test_vulnerable_app.py
+# is a *fixture*: it intentionally contains vulnerable code for manual scanner
+# demos and defines no test functions, so it must not be collected.
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+    # Intentionally vulnerable sample app used to demo the scanner findings.
+    # It is fixture data, not project code, so lint rules must not apply to it.
+    "test_vulnerable_app.py",
+]
+
+[tool.ruff.lint]
+# Explicit rule selection instead of relying on ruff's version-dependent
+# defaults, so CI fails for the same reasons on every run. The set covers
+# correctness (E, F, B), import hygiene (I), modernisation (UP, PIE) and
+# security (S) - the last one matters most for a security scanner.
+select = ["E", "F", "B", "I", "UP", "PIE", "RUF", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test helpers legitimately inspect test files and re-raise whatever they catch.
+"tests/*" = ["S101"]

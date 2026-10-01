@@ -1,13 +1,14 @@
 """VibeGuard rule registry and scanner orchestrator."""
 
+import logging
 from pathlib import Path
 
-from .models import ScanResult, SUPPORTED_EXTENSIONS, SKIP_PATTERNS
+from .models import SKIP_PATTERNS, SUPPORTED_EXTENSIONS, ScanResult
+from .rules.cors_debug import scan_file as scan_cors_debug
+from .rules.dangerous_functions import scan_file as scan_dangerous
+from .rules.missing_auth import scan_file as scan_missing_auth
 from .rules.secrets import scan_file as scan_secrets
 from .rules.sql_injection import scan_file as scan_sql_injection
-from .rules.dangerous_functions import scan_file as scan_dangerous
-from .rules.cors_debug import scan_file as scan_cors_debug
-from .rules.missing_auth import scan_file as scan_missing_auth
 
 # All rule functions
 RULES = [
@@ -20,6 +21,8 @@ RULES = [
 
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB default cap
+
+logger = logging.getLogger(__name__)
 
 
 def should_scan(path: Path) -> bool:
@@ -42,7 +45,10 @@ def scan_file(path: Path) -> list:
         try:
             findings.extend(rule_fn(path))
         except Exception:
-            # Don't let one rule crash the scan
+            # A malformed file can raise anything inside a rule. One bad rule
+            # must not abort the whole scan, so the failure is recorded at
+            # debug level rather than discarded without a trace.
+            logger.debug("rule %s failed on %s", getattr(rule_fn, "__module__", rule_fn), path, exc_info=True)
             continue
     return findings
 
@@ -75,8 +81,8 @@ def scan_directory(target: Path, max_size: int = 10 * 1024 * 1024) -> ScanResult
             try:
                 content = target.read_text(encoding="utf-8", errors="ignore")
                 result.lines_scanned = len(content.splitlines())
-            except Exception:
-                pass
+            except (OSError, ValueError, UnicodeDecodeError):
+                logger.debug("could not read %s", target, exc_info=True)
             result.findings = scan_file(target)
         return result
 
@@ -110,7 +116,8 @@ def scan_directory(target: Path, max_size: int = 10 * 1024 * 1024) -> ScanResult
         try:
             content = path.read_text(encoding="utf-8", errors="ignore")
             result.lines_scanned += len(content.splitlines())
-        except Exception:
+        except (OSError, ValueError, UnicodeDecodeError):
+            logger.debug("could not read %s", path, exc_info=True)
             continue
 
         result.findings.extend(scan_file(path))

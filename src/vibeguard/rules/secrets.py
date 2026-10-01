@@ -65,7 +65,7 @@ def scan_file(path: Path) -> list[Finding]:
     for line_num, line in enumerate(content.splitlines(), 1):
         # Skip comments (basic heuristic)
         stripped = line.strip()
-        if stripped.startswith("#") or stripped.startswith("//") or stripped.startswith("*"):
+        if stripped.startswith(("#", "//", "*")):
             continue
         
         if len(line) > MAX_LINE_LENGTH:
@@ -88,7 +88,10 @@ def scan_file(path: Path) -> list[Finding]:
                         line=line_num,
                         column=match.start() + 1,
                         snippet=snippet,
-                        fix_hint="Use environment variables or a secrets manager (e.g., AWS Secrets Manager, HashiCorp Vault)",
+                        fix_hint=(
+                            "Use environment variables or a secrets manager "
+                            "(e.g., AWS Secrets Manager, HashiCorp Vault)"
+                        ),
                     )
                 )
     

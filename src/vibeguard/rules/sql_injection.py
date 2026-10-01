@@ -48,7 +48,7 @@ def scan_file(path: Path) -> list[Finding]:
 
     for line_num, line in enumerate(content.splitlines(), 1):
         stripped = line.strip()
-        if stripped.startswith("#") or stripped.startswith("//"):
+        if stripped.startswith(("#", "//")):
             continue
         
         if len(line) > MAX_LINE_LENGTH:
@@ -70,7 +70,10 @@ def scan_file(path: Path) -> list[Finding]:
                         line=line_num,
                         column=match.start() + 1,
                         snippet=snippet,
-                        fix_hint="Use parameterized queries (e.g., cursor.execute('SELECT * FROM t WHERE id = ?', (user_id,)))",
+                        fix_hint=(
+                            "Use parameterized queries "
+                            "(e.g., cursor.execute('SELECT * FROM t WHERE id = ?', (user_id,)))"
+                        ),
                     )
                 )
     

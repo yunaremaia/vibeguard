@@ -1,11 +1,9 @@
 """Tests for symlink path traversal protection."""
 import sys
-from pathlib import Path
 
 sys.path.insert(0, "src")
 
 from vibeguard.scanner import scan_directory
-from vibeguard.models import ScanResult
 
 
 def test_symlink_outside_target_is_skipped(tmp_path):

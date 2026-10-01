@@ -61,7 +61,7 @@ def scan_file(path: Path) -> list[Finding]:
     # Second pass: find endpoints without auth
     for line_num, line in enumerate(lines, 1):
         stripped = line.strip()
-        if stripped.startswith("#") or stripped.startswith("//"):
+        if stripped.startswith(("#", "//")):
             continue
         
         for pattern in ENDPOINT_PATTERNS:
@@ -88,7 +88,10 @@ def scan_file(path: Path) -> list[Finding]:
                             line=line_num,
                             column=match.start() + 1,
                             snippet=snippet,
-                            fix_hint="Add authentication middleware or decorator (e.g., @login_required, Depends(get_current_user))",
+                            fix_hint=(
+                                "Add authentication middleware or decorator "
+                                "(e.g., @login_required, Depends(get_current_user))"
+                            ),
                         )
                     )
     
