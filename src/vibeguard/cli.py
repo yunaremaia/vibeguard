@@ -10,7 +10,12 @@ from .formatters import format_json, format_sarif, format_text
 from .scanner import scan_directory
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser.
+
+    Split out of ``main`` so tests can validate documented CLI invocations
+    against the real parser without executing a scan.
+    """
     parser = argparse.ArgumentParser(
         prog="vibeguard",
         description="Security scanner for AI-generated code",
@@ -44,8 +49,12 @@ def main() -> int:
         action="version",
         version=f"%(prog)s {__version__}",
     )
-    
-    args = parser.parse_args()
+
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
     
     target = Path(args.target)
     if not target.exists():
