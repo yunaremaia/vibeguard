@@ -1,6 +1,12 @@
 
 # VibeGuard
 
+![CI](https://github.com/yunaremaia/vibeguard/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11-blue.svg)
+![License](https://img.shields.io/github/license/yunaremaia/vibeguard)
+![Stars](https://img.shields.io/github/stars/yunaremaia/vibeguard)
+
+
 
 Security scanner for AI-generated code. Detects common security issues in "vibe-coded" applications.
 [Changelog](CHANGELOG.md)
@@ -76,6 +82,19 @@ jobs:
         with:
           sarif_file: vibeguard.sarif
 ```
+
+
+If this tool is useful to you, a star helps other people find it.
+
+## Related tools
+
+- **[agent-guard](https://github.com/yunaremaia/agent-guard)** — enforce guardrails on AI agent tool calls
+- **[ci-test-gate](https://github.com/yunaremaia/ci-test-gate)** — block PRs until the required tests actually run
+- **[sandbox-ffi-layers](https://github.com/yunaremaia/sandbox-ffi-layers)** — layer FFI calls behind a sandbox boundary
+- **[driftcheck](https://github.com/yunaremaia/driftcheck)** — detect version drift between docs and toolchain files
+
+Part of a family of focused, single-purpose developer tools — each one does one thing
+and does it well.
 
 ## License
 
