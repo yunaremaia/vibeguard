@@ -5,6 +5,8 @@ per-rule failure isolation guarantee and the file-size guards.
 """
 
 import logging
+import os
+import sys
 from pathlib import Path
 
 from vibeguard import scanner
@@ -212,15 +214,26 @@ def test_all_rules_are_registered_in_scanner():
 # The scanner documents that a malformed or vanishing file must never abort a
 # scan. These make a single path fail at the exact call site and assert the
 # scan still returns a usable result.
+#
+# The injection is scoped to calls that originate in scanner.py. On Python
+# <= 3.12 both Path.resolve() and Path.is_file() call Path.stat() internally,
+# so an unscoped patch would break one of those *unguarded* calls before ever
+# reaching the guarded one. Scoping by caller keeps the test honest and makes
+# it behave identically on every supported interpreter.
 # ---------------------------------------------------------------------------
 
 
-def _fail_only_for(monkeypatch, method: str, target: Path, exc: Exception) -> None:
-    """Make ``Path.<method>`` raise *exc* for exactly *target*."""
+def _fail_from_scanner_only(monkeypatch, method: str, target: Path, exc: Exception) -> None:
+    """Make ``Path.<method>`` raise *exc* for *target*, but only when the
+    caller is vibeguard's scanner module."""
     original = getattr(Path, method)
+    # Normalised on both sides: a co_filename recorded via a relative sys.path
+    # entry would otherwise not match an absolute __file__.
+    scanner_file = os.path.abspath(scanner.__file__)
 
     def patched(self, *args, **kwargs):
-        if self == target:
+        caller = sys._getframe(1).f_code.co_filename
+        if self == target and os.path.abspath(caller) == scanner_file:
             raise exc
         return original(self, *args, **kwargs)
 
@@ -232,7 +245,7 @@ def test_scan_directory_survives_a_stat_failure(monkeypatch, tmp_path):
     (tmp_path / "ok.py").write_text("a = 1\n", encoding="utf-8")
     broken = tmp_path / "broken.py"
     broken.write_text("b = 2\n", encoding="utf-8")
-    _fail_only_for(monkeypatch, "stat", broken, OSError("vanished"))
+    _fail_from_scanner_only(monkeypatch, "stat", broken, OSError("vanished"))
 
     result = scan_directory(tmp_path)
     assert result.files_scanned == 1
@@ -248,8 +261,8 @@ def test_scan_directory_survives_a_read_failure(monkeypatch, tmp_path):
     """
     (tmp_path / "ok.py").write_text("a = 1\n", encoding="utf-8")
     broken = tmp_path / "broken.py"
-    broken.write_text('API_KEY = "abcdefghij0123456789ABCDEF"\n', encoding="utf-8")
-    _fail_only_for(monkeypatch, "read_text", broken, OSError("permission denied"))
+    broken.write_text('API_KEY = "REDACTEDFAKEKEYDONTUSE0000"\n', encoding="utf-8")
+    _fail_from_scanner_only(monkeypatch, "read_text", broken, OSError("permission denied"))
 
     result = scan_directory(tmp_path)
     assert result.lines_scanned == 1, "the unreadable file must contribute no lines"
@@ -263,7 +276,7 @@ def test_scan_directory_survives_a_symlink_resolve_failure(monkeypatch, tmp_path
     (project / "app.py").write_text("a = 1\n", encoding="utf-8")
     link = project / "link.py"
     link.symlink_to(project / "app.py")
-    _fail_only_for(monkeypatch, "resolve", link, RuntimeError("symlink loop"))
+    _fail_from_scanner_only(monkeypatch, "resolve", link, RuntimeError("symlink loop"))
 
     result = scan_directory(project)
     assert result.files_scanned == 1
@@ -272,7 +285,7 @@ def test_scan_directory_survives_a_symlink_resolve_failure(monkeypatch, tmp_path
 def test_scan_directory_survives_a_target_resolve_failure(monkeypatch, tmp_path):
     """If the target itself cannot be resolved, the scan still runs."""
     (tmp_path / "app.py").write_text("a = 1\n", encoding="utf-8")
-    _fail_only_for(monkeypatch, "resolve", tmp_path, OSError("cannot resolve"))
+    _fail_from_scanner_only(monkeypatch, "resolve", tmp_path, OSError("cannot resolve"))
 
     result = scan_directory(tmp_path)
     assert result.files_scanned == 1
@@ -280,13 +293,13 @@ def test_scan_directory_survives_a_target_resolve_failure(monkeypatch, tmp_path)
 
 def test_single_file_scan_survives_stat_and_read_failures(monkeypatch, vulnerable_file):
     """A single-file target that cannot be stat'ed or read still returns."""
-    _fail_only_for(monkeypatch, "stat", vulnerable_file, OSError("vanished"))
+    _fail_from_scanner_only(monkeypatch, "stat", vulnerable_file, OSError("vanished"))
     result = scan_directory(vulnerable_file)
     # The size check failed, so the file is still scanned.
     assert result.files_scanned == 1
 
     monkeypatch.undo()
-    _fail_only_for(monkeypatch, "read_text", vulnerable_file, OSError("denied"))
+    _fail_from_scanner_only(monkeypatch, "read_text", vulnerable_file, OSError("denied"))
     result = scan_directory(vulnerable_file)
     assert result.files_scanned == 1
     assert result.lines_scanned == 0
