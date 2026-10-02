@@ -27,13 +27,17 @@ VibeGuard scans your codebase and flags these issues before they reach productio
 ## Install
 
 ```bash
-pip install vibeguard-py
+pip install git+https://github.com/yunaremaia/vibeguard.git
 ```
 
+> **Note on installation:** this project is not published on PyPI, so it installs
+> from the git repository rather than from the index.
+
 > **Note on the package name:** the short `vibeguard` name on PyPI belongs to a
-> different, unrelated project by a different author. This distribution is
-> `vibeguard-py` — a static scanner for AI-generated code. The CLI command is
-> still `vibeguard`, and the importable module is still `vibeguard`.
+> different, unrelated project by a different author. The distribution declared
+> in `pyproject.toml` is `vibeguard-py` — a static scanner for AI-generated
+> code. The CLI command is still `vibeguard`, and the importable module is still
+> `vibeguard`.
 
 ## Usage
 
@@ -83,7 +87,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install vibeguard-py
+      - run: pip install git+https://github.com/yunaremaia/vibeguard.git
       - run: vibeguard . --format sarif --output vibeguard.sarif
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
