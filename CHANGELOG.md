@@ -8,10 +8,14 @@ All notable changes to VibeGuard will be documented in this file.
 
 - GitHub Actions CI workflow with a test matrix on Python 3.11/3.12 and a ruff lint job.
 - Ruff and pytest configuration in `pyproject.toml`.
+- `Publish to PyPI` release workflow using trusted publishing (`id-token: write`, environment `pypi`), so the first release has a publish path at all.
+- `tests/test_distribution_name.py`, which fails the build if any tracked surface ever tells a reader to install a forbidden bare name again.
 - Future additions will be documented here.
 
 ### Changed
 
+- Renamed the distribution from `vibeguard` to `vibeguard-py`. The bare `vibeguard` name on PyPI belongs to an unrelated third-party project by a different author, so the old name could never be published under this project's account, and every `pip install vibeguard` in the docs silently installed someone else's package. Only the distribution name moves: the console script, the importable module and the repository name stay `vibeguard`.
+- Replaced every documented install line with `pip install git+https://github.com/yunaremaia/vibeguard.git`, since the package is not on PyPI yet.
 - Future changes will be documented here.
 
 ### Fixed

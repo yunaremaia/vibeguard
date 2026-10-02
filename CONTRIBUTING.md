@@ -8,6 +8,17 @@ Thanks for your interest in this project! Here's how to contribute.
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/vibeguard.git`
 3. Create a feature branch: `git checkout -b my-feature`
 
+## Development Setup
+
+VibeGuard is not published on PyPI yet, so work from a local clone. The install
+comes from the working tree, never from a bare `pip install vibeguard`:
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e . pytest pytest-cov ruff
+pytest --cov=src/vibeguard
+```
+
 ## Reporting Issues
 
 Open an issue at [GitHub Issues](https://github.com/yunaremaia/vibeguard/issues) with:
