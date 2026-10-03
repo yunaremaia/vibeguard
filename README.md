@@ -98,6 +98,23 @@ jobs:
 
 If this tool is useful to you, a star helps other people find it.
 
+## Sponsoring / Treasury
+
+VibeGuard is MIT licensed and maintained in the open. Scanning AI-generated code for the
+security issues it tends to ship with stays free, and keeping the detection rules
+current as new vulnerability patterns show up is the ongoing work. If it saves you
+time, you can support continued development through GitHub Sponsors or the Solana
+treasury below.
+
+Funding details are declared in [`.github/FUNDING.yml`](.github/FUNDING.yml), which is
+what GitHub reads to render the **Sponsor** button on this repository.
+
+- **GitHub Sponsors:** [@yunaremaia](https://github.com/sponsors/yunaremaia)
+- **Solana:** `Eeztv1nCYUt1fwGWpzKC948gaWfjejYCAuLtUMgzDWbW`
+
+Use the Solana address only for intended donations. Anyone can generate a similar
+address, so verify the address against `.github/FUNDING.yml` before sending funds.
+
 ## Related tools
 
 - **[agent-guard](https://github.com/yunaremaia/agent-guard)** — enforce guardrails on AI agent tool calls
