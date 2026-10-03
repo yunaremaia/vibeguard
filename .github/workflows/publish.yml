@@ -3,6 +3,7 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 # Least privilege: the only write scope needed is the OIDC token that PyPI's
 # trusted publisher exchanges for an upload token.
