@@ -71,6 +71,12 @@ vibeguard . --min-severity HIGH
 | VGB-004 | HIGH | CORS wildcard origin |
 | VGB-005 | MEDIUM | Debug mode enabled |
 | VGB-006 | HIGH | Endpoints without visible authentication |
+| VGB-020 | HIGH | Sensitive handlers (delete, admin, transfer) without an authorization check |
+| VGB-021 | MEDIUM | API routes without rate limiting |
+| VGB-022 | CRITICAL | Unvalidated user input reaching exec/SQL/shell operations |
+| VGB-023 | HIGH | Insecure defaults (TLS verify off, cookie flags off, bound to 0.0.0.0) |
+| VGB-024 | HIGH | State transitions without a precondition check |
+| VGB-025 | MEDIUM | Responses built without security headers (CSP, HSTS, X-Frame-Options) |
 
 ## CI/CD Integration
 
