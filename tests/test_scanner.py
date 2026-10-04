@@ -10,7 +10,14 @@ import sys
 from pathlib import Path
 
 from vibeguard import scanner
-from vibeguard.rules import cors_debug, dangerous_functions, missing_auth, secrets, sql_injection
+from vibeguard.rules import (
+    cors_debug,
+    dangerous_functions,
+    insecure_design,
+    missing_auth,
+    secrets,
+    sql_injection,
+)
 from vibeguard.scanner import RULES, scan_directory, scan_file, should_scan
 
 
@@ -243,18 +250,19 @@ def test_scan_directory_accepts_relative_path_target(tmp_path, monkeypatch):
 def test_rules_return_no_findings_for_missing_file(tmp_path):
     """Every rule tolerates a file that cannot be read."""
     missing = tmp_path / "gone.py"
-    for rule in (secrets, sql_injection, dangerous_functions, cors_debug, missing_auth):
+    for rule in (secrets, sql_injection, dangerous_functions, cors_debug, missing_auth, insecure_design):
         assert rule.scan_file(missing) == [], rule.__name__
 
 
 def test_all_rules_are_registered_in_scanner():
-    """The registry contains exactly the five shipped rules."""
+    """The registry contains exactly the shipped rules, wired in no extras."""
     assert set(RULES) == {
         secrets.scan_file,
         sql_injection.scan_file,
         dangerous_functions.scan_file,
         cors_debug.scan_file,
         missing_auth.scan_file,
+        insecure_design.scan_file,
     }
     assert all(callable(r) for r in RULES)
     assert all(_rule_module_name(r) for r in RULES)

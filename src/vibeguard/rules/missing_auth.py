@@ -107,7 +107,14 @@ def scan_file(path: Path) -> list[Finding]:
                                 "Add authentication middleware or decorator "
                                 "(e.g., @login_required, Depends(get_current_user))"
                             ),
-                        )
+                        ),
                     )
+
+                # A line declares exactly ONE endpoint. Several ENDPOINT_PATTERNS match
+                # the same text (the Flask decorator, the unanchored Express variant and
+                # the decorator-only variant), so without this the loop appends N
+                # byte-identical findings that differ only in column. Break whether or
+                # not the endpoint was reported: either way it has been decided.
+                break
     
     return findings

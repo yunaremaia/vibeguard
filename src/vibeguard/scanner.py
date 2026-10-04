@@ -6,6 +6,7 @@ from pathlib import Path
 from .models import SKIP_PATTERNS, SUPPORTED_EXTENSIONS, ScanResult
 from .rules.cors_debug import scan_file as scan_cors_debug
 from .rules.dangerous_functions import scan_file as scan_dangerous
+from .rules.insecure_design import scan_file as scan_insecure_design
 from .rules.missing_auth import scan_file as scan_missing_auth
 from .rules.secrets import scan_file as scan_secrets
 from .rules.sql_injection import scan_file as scan_sql_injection
@@ -17,6 +18,7 @@ RULES = [
     scan_dangerous,
     scan_cors_debug,
     scan_missing_auth,
+    scan_insecure_design,
 ]
 
 

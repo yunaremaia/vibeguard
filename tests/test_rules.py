@@ -183,6 +183,18 @@ def test_dangerous_functions_detects_each_pattern(tmp_path, label, source):
     assert findings[0].severity == "CRITICAL"
 
 
+def test_eval_matching_both_python_and_js_patterns_yields_one_finding(tmp_path):
+    """`eval(req.body)` matches the Python *and* the JS eval pattern: one finding.
+
+    Both patterns carry the same rule id, severity and message, so reporting both
+    only duplicates the row and inflates the result count.
+    """
+    path = write(tmp_path, "app.js", "const out = eval(req.body);\n")
+    findings = dangerous_functions.scan_file(path)
+    assert len(findings) == 1
+    assert findings[0].rule_id == "VGB-003"
+
+
 def test_dangerous_functions_ignores_literal_eval(tmp_path):
     """eval() on a literal is not user-input-driven code execution."""
     path = write(tmp_path, "safe.py", "value = eval('1 + 1')\n")
@@ -365,9 +377,7 @@ def test_auth_on_one_route_does_not_excuse_the_next(tmp_path):
         "    return None\n",
     )
     findings = missing_auth.scan_file(path)
-    # set(), not list(): a route matching several ENDPOINT_PATTERNS already emits
-    # one finding per pattern (pre-existing, unrelated to the suppression scope).
-    assert {f.line for f in findings} == {7}
+    assert [f.line for f in findings] == [7]
 
 
 def test_route_signed_with_depends_is_not_reported(tmp_path):
@@ -401,3 +411,40 @@ def test_missing_auth_truncates_long_snippet_in_output(tmp_path):
     snippet = next(f for f in missing_auth.scan_file(path) if f.rule_id == "VGB-006").snippet
     assert len(snippet) == 123
     assert snippet.endswith("...")
+
+
+def test_one_route_yields_exactly_one_finding(tmp_path):
+    """A route declaration is one finding, not one per matching ENDPOINT_PATTERNS entry.
+
+    `@app.get("/admin/users")` matches the Flask decorator pattern, the unanchored
+    Express pattern and the decorator-only pattern. Reporting all three inflates the
+    result count with byte-identical findings that differ only in column.
+    """
+    path = write(tmp_path, "app.py", '@app.get("/admin/users")\ndef list_users():\n    pass\n')
+    findings = missing_auth.scan_file(path)
+    assert len(findings) == 1
+    assert findings[0].rule_id == "VGB-006"
+    assert findings[0].line == 1
+
+
+def test_two_routes_yield_two_findings(tmp_path):
+    """Positive control: distinct routes are still reported, one finding each."""
+    path = write(
+        tmp_path,
+        "app.py",
+        '@app.get("/admin/users")\ndef list_users():\n    pass\n'
+        '\n\n@app.post("/admin/wipe")\ndef wipe():\n    pass\n',
+    )
+    findings = missing_auth.scan_file(path)
+    assert len(findings) == 2
+    assert sorted(f.line for f in findings) == [1, 6]
+
+
+def test_multi_line_decorator_without_a_quoted_path_is_still_reported(tmp_path):
+    """The pattern loop must keep covering a decorator whose path sits on the next line.
+
+    Only the decorator-only pattern matches the first line here, so breaking out of
+    the loop on the first match must not lose the route.
+    """
+    path = write(tmp_path, "app.py", '@app.get(\n    "/admin/users",\n)\ndef list_users():\n    pass\n')
+    assert [f.line for f in missing_auth.scan_file(path)] == [1]
