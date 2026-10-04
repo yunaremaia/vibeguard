@@ -9,9 +9,11 @@ MAX_LINE_LENGTH = 50_000  # 50 KB
 
 # Pre-compiled dangerous function patterns.
 DANGEROUS_PATTERNS = [
-    # Python eval()
+    # eval() with a user-input-ish first argument, Python or JavaScript names.
+    # One pattern, not two: the Python and JS variants carried the same message and
+    # their name lists overlap, so `eval(req.body)` reported the same finding twice.
     (
-        re.compile(r"""(?<![\w])eval\s*\(\s*(?:request|req|input|params|body|data|user)"""),
+        re.compile(r"""(?<![\w])eval\s*\(\s*(?:request|req|input|params|body|data|user|query)"""),
         "eval() called with user input — arbitrary code execution vulnerability",
     ),
     # Python exec()
@@ -28,11 +30,6 @@ DANGEROUS_PATTERNS = [
     (
         re.compile(r"""(?<![\w])subprocess\.(?:run|call|Popen)\s*\(.*shell\s*=\s*True"""),
         "subprocess with shell=True — command injection risk if user input reaches it",
-    ),
-    # JavaScript eval()
-    (
-        re.compile(r"""(?<![\w])eval\s*\(\s*(?:req|request|params|query|body|user)"""),
-        "eval() called with user input — arbitrary code execution vulnerability",
     ),
     # JavaScript Function() constructor
     (
