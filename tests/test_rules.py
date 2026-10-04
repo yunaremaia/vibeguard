@@ -321,6 +321,21 @@ def test_endpoint_carrying_an_auth_decorator_is_not_reported(tmp_path):
     assert missing_auth.scan_file(path) == []
 
 
+def test_endpoint_with_auth_decorator_above_the_route_is_not_reported(tmp_path):
+    """Auth guarding *this* route above the route line suppresses the finding too.
+
+    The decorator order is free: Flask applies the topmost decorator outermost, so
+    `@login_required` above `@app.get(...)` guards the endpoint just as much as
+    below it. The rule has to walk the whole decorator stack, not only downward.
+    """
+    path = write(
+        tmp_path,
+        "app.py",
+        "@login_required\n@app.get('/admin/users')\ndef list_users():\n    return []\n",
+    )
+    assert missing_auth.scan_file(path) == []
+
+
 def test_unprotected_endpoint_is_reported_despite_auth_elsewhere_in_the_file(tmp_path):
     """Regression #130: an incidental `import jwt` silences every route in the file.
 
