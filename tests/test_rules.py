@@ -311,12 +311,58 @@ def test_endpoint_without_auth_is_reported(tmp_path):
     assert "login_required" in finding.fix_hint
 
 
-def test_file_containing_auth_is_assumed_protected(tmp_path):
-    """If the file shows any auth pattern, the rule backs off entirely."""
+def test_endpoint_carrying_an_auth_decorator_is_not_reported(tmp_path):
+    """Auth guarding *this* route suppresses the finding for it."""
     path = write(
         tmp_path,
         "app.py",
         '@app.get("/admin/users")\n@login_required\ndef list_users():\n    pass\n',
+    )
+    assert missing_auth.scan_file(path) == []
+
+
+def test_unprotected_endpoint_is_reported_despite_auth_elsewhere_in_the_file(tmp_path):
+    """Regression #130: an incidental `import jwt` silences every route in the file.
+
+    A bare module import guards nothing, so the rule must still fire.
+    """
+    path = write(
+        tmp_path,
+        "api.py",
+        "import jwt\n\n\n@app.get('/admin/users')\ndef list_users():\n    return []\n",
+    )
+    assert "VGB-006" in rule_ids(missing_auth.scan_file(path))
+
+
+def test_auth_on_one_route_does_not_excuse_the_next(tmp_path):
+    """Suppression is per endpoint: the unprotected neighbour is still reported."""
+    path = write(
+        tmp_path,
+        "app.py",
+        "@app.get('/admin/users')\n"
+        "@login_required\n"
+        "def list_users():\n"
+        "    return []\n"
+        "\n"
+        "\n"
+        "@app.get('/admin/wipe')\n"
+        "def wipe():\n"
+        "    return None\n",
+    )
+    findings = missing_auth.scan_file(path)
+    # set(), not list(): a route matching several ENDPOINT_PATTERNS already emits
+    # one finding per pattern (pre-existing, unrelated to the suppression scope).
+    assert {f.line for f in findings} == {7}
+
+
+def test_route_signed_with_depends_is_not_reported(tmp_path):
+    """FastAPI guards the endpoint through its own signature."""
+    path = write(
+        tmp_path,
+        "app.py",
+        "@app.get('/admin/users')\n"
+        "def list_users(user=Depends(get_current_user)):\n"
+        "    return []\n",
     )
     assert missing_auth.scan_file(path) == []
 

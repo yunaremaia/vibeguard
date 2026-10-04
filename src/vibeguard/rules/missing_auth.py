@@ -33,32 +33,47 @@ PUBLIC_ENDPOINTS = [
 ]
 
 
+# How many lines below a route decorator still count as "that endpoint".
+# ponytail: fixed window; a real AST walk if routes ever need more context.
+UNIT_LINES = 15
+
+_DEF_START = re.compile(r"^\s*(?:async\s+def|def|function)\b")
+
+
+def _endpoint_unit(lines: list[str], index: int) -> list[str]:
+    """Return the lines belonging to the endpoint declared at *index*.
+
+    That is the decorator stack around the route plus the definition line, where
+    auth actually shows up (``@login_required``, ``Depends(get_current_user)``,
+    ``requireAuth`` on an Express route...). Only this unit may suppress a
+    finding: auth elsewhere in the file guards nothing.
+    """
+    start = index
+    while start > 0 and lines[start - 1].lstrip().startswith("@"):
+        start -= 1
+
+    end = min(len(lines), index + UNIT_LINES)
+    for pos in range(index + 1, end):
+        if _DEF_START.match(lines[pos]):
+            return lines[start : pos + 1]
+    return lines[start:end]
+
+
+def _has_auth(lines: list[str]) -> bool:
+    return any(re.search(pattern, line) for line in lines for pattern in AUTH_PATTERNS)
+
+
 def scan_file(path: Path) -> list[Finding]:
     """Scan a single file for potentially unauthenticated endpoints."""
     findings: list[Finding] = []
-    
+
     try:
         content = path.read_text(encoding="utf-8", errors="ignore")
     except (OSError, UnicodeDecodeError):
         return findings
 
     lines = content.splitlines()
-    
-    # First pass: check if file has any auth patterns at all
-    has_auth = False
-    for line in lines:
-        for pattern in AUTH_PATTERNS:
-            if re.search(pattern, line):
-                has_auth = True
-                break
-        if has_auth:
-            break
-    
-    # If file has auth patterns, assume endpoints are protected
-    if has_auth:
-        return findings
-    
-    # Second pass: find endpoints without auth
+
     for line_num, line in enumerate(lines, 1):
         stripped = line.strip()
         if stripped.startswith(("#", "//")):
@@ -74,7 +89,7 @@ def scan_file(path: Path) -> list[Finding]:
                         is_public = True
                         break
                 
-                if not is_public:
+                if not is_public and not _has_auth(_endpoint_unit(lines, line_num - 1)):
                     snippet = line.strip()
                     if len(snippet) > 120:
                         snippet = snippet[:120] + "..."
