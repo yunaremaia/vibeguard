@@ -44,6 +44,18 @@ def test_should_scan_rejects_skipped_extension_before_skip_patterns(tmp_path):
     assert should_scan(Path("dist") / "bundle.js") is False
 
 
+def test_should_scan_out_of_base_falls_back_to_own_path_parts():
+    """A path outside ``base`` is matched on its own parts, not rejected.
+
+    should_scan() is public API (docs/API.md), so an embedder may pass a path
+    that is not under base. Matching its components keeps the pre-base
+    behaviour instead of raising ValueError.
+    """
+    base = Path("/scanned/project")
+    assert should_scan(Path("vendor") / "app.py", base=base) is False
+    assert should_scan(Path("src") / "app.py", base=base) is True
+
+
 def test_scan_directory_scans_dotenv_files(tmp_path):
     """#127: Path(".env").suffix is "", so the dotenv family needs a name gate."""
     (tmp_path / ".env").write_text('API_KEY = "REDACTEDFAKEKEYDONTUSE0000"\n', encoding="utf-8")
