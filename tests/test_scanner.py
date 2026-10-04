@@ -44,6 +44,30 @@ def test_should_scan_rejects_skipped_extension_before_skip_patterns(tmp_path):
     assert should_scan(Path("dist") / "bundle.js") is False
 
 
+def test_should_scan_out_of_base_falls_back_to_own_path_parts():
+    """A path outside ``base`` is matched on its own parts, not rejected.
+
+    should_scan() is public API (docs/API.md), so an embedder may pass a path
+    that is not under base. Matching its components keeps the pre-base
+    behaviour instead of raising ValueError.
+    """
+    base = Path("/scanned/project")
+    assert should_scan(Path("vendor") / "app.py", base=base) is False
+    assert should_scan(Path("src") / "app.py", base=base) is True
+
+
+def test_scan_directory_scans_dotenv_files(tmp_path):
+    """#127: Path(".env").suffix is "", so the dotenv family needs a name gate."""
+    (tmp_path / ".env").write_text('API_KEY = "REDACTEDFAKEKEYDONTUSE0000"\n', encoding="utf-8")
+    (tmp_path / ".env.local").write_text("DEBUG = True\n", encoding="utf-8")
+    assert should_scan(tmp_path / ".env") is True
+    assert should_scan(tmp_path / ".env.local") is True
+
+    result = scan_directory(tmp_path)
+    assert result.files_scanned == 2
+    assert "VGB-001" in {f.rule_id for f in result.findings}
+
+
 # ---------------------------------------------------------------------------
 # scan_file: rule isolation
 # ---------------------------------------------------------------------------
@@ -150,6 +174,34 @@ def test_scan_directory_skips_unsupported_files_in_tree(tmp_path):
     (tmp_path / "app.py").write_text("a = 1\n", encoding="utf-8")
     result = scan_directory(tmp_path)
     assert result.files_scanned == 1
+
+
+def test_scan_directory_ignores_skip_dirs_above_the_target(tmp_path):
+    """#128: an ancestor named build/ must not suppress the requested scan."""
+    project = tmp_path / "build" / "proj"
+    (project / "pkg").mkdir(parents=True)
+    (project / "pkg" / "app.py").write_text(
+        'API_KEY = "REDACTEDFAKEKEYDONTUSE0000"\n', encoding="utf-8"
+    )
+
+    result = scan_directory(project)
+    assert result.files_scanned == 1, "the ancestor build/ must not zero out the scan"
+    assert result.has_findings
+
+    # Skip dirs *inside* the target are still pruned.
+    (project / "pkg" / "node_modules").mkdir()
+    (project / "pkg" / "node_modules" / "index.js").write_text("const a = 1\n", encoding="utf-8")
+    assert scan_directory(project).files_scanned == 1
+
+
+def test_scan_directory_applies_max_size_inside_the_walk(tmp_path):
+    """#129: the max_size parameter must also cap files found by the walk."""
+    (tmp_path / "big.py").write_text("x = 1\n" * 500, encoding="utf-8")  # 2 KB
+    (tmp_path / "small.py").write_text("y = 1\n", encoding="utf-8")  # 6 bytes
+
+    result = scan_directory(tmp_path, max_size=100)
+    assert result.files_scanned == 1
+    assert result.lines_scanned == 1
 
 
 def test_scan_directory_enforces_module_level_max_file_size(monkeypatch, tmp_path):

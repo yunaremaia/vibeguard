@@ -25,16 +25,33 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB default cap
 logger = logging.getLogger(__name__)
 
 
-def should_scan(path: Path) -> bool:
-    """Check if a file should be scanned."""
-    if path.suffix not in SUPPORTED_EXTENSIONS:
-        return False
-    
+def should_scan(path: Path, base: Path | None = None) -> bool:
+    """Check if a file should be scanned.
+
+    ``base`` is the scan target. Skip patterns are matched against the
+    components of ``path`` *relative to* ``base``, so a project that merely
+    lives under an ancestor named ``build/`` is still scanned (#128). Without
+    ``base`` every component is matched, as before.
+    """
+    # A leading dot starts the file name, not an extension: Path(".env").suffix
+    # is "" and Path(".env.local").suffix is ".local". Gate the dotenv family
+    # by name, then fall through to the extension check (#127).
+    if not (path.name == ".env" or path.name.startswith(".env.")):
+        if path.suffix not in SUPPORTED_EXTENSIONS:
+            return False
+
     # Check skip patterns
-    for part in path.parts:
+    if base is not None:
+        try:
+            parts = path.relative_to(base).parts
+        except ValueError:
+            parts = path.parts
+    else:
+        parts = path.parts
+    for part in parts:
         if part in SKIP_PATTERNS:
             return False
-    
+
     return True
 
 
@@ -101,12 +118,13 @@ def scan_directory(target: Path, max_size: int = 10 * 1024 * 1024) -> ScanResult
         except (OSError, RuntimeError):
             continue
 
-        if not should_scan(path):
+        if not should_scan(path, base=target):
             continue
 
-        # SECURITY: Skip files larger than MAX_FILE_SIZE to avoid OOM
+        # SECURITY: Skip files larger than the cap to avoid OOM. The hard
+        # MAX_FILE_SIZE ceiling still applies on top of the caller's max_size.
         try:
-            if path.stat().st_size > MAX_FILE_SIZE:
+            if path.stat().st_size > min(max_size, MAX_FILE_SIZE):
                 continue
         except OSError:
             continue
