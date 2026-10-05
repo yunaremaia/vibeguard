@@ -16,6 +16,7 @@ from vibeguard.rules import (
     dangerous_functions,
     insecure_design,
     missing_auth,
+    secret_entropy,
     secrets,
     sql_injection,
 )
@@ -251,7 +252,16 @@ def test_scan_directory_accepts_relative_path_target(tmp_path, monkeypatch):
 def test_rules_return_no_findings_for_missing_file(tmp_path):
     """Every rule tolerates a file that cannot be read."""
     missing = tmp_path / "gone.py"
-    for rule in (secrets, sql_injection, dangerous_functions, cors_debug, missing_auth, insecure_design, client_side):
+    for rule in (
+        secrets,
+        secret_entropy,
+        sql_injection,
+        dangerous_functions,
+        cors_debug,
+        missing_auth,
+        insecure_design,
+        client_side,
+    ):
         assert rule.scan_file(missing) == [], rule.__name__
 
 
@@ -259,6 +269,7 @@ def test_all_rules_are_registered_in_scanner():
     """The registry contains exactly the shipped rules, wired in no extras."""
     assert set(RULES) == {
         secrets.scan_file,
+        secret_entropy.scan_file,
         sql_injection.scan_file,
         dangerous_functions.scan_file,
         cors_debug.scan_file,

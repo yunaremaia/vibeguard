@@ -9,12 +9,14 @@ from .rules.cors_debug import scan_file as scan_cors_debug
 from .rules.dangerous_functions import scan_file as scan_dangerous
 from .rules.insecure_design import scan_file as scan_insecure_design
 from .rules.missing_auth import scan_file as scan_missing_auth
+from .rules.secret_entropy import scan_file as scan_secret_entropy
 from .rules.secrets import scan_file as scan_secrets
 from .rules.sql_injection import scan_file as scan_sql_injection
 
 # All rule functions
 RULES = [
     scan_secrets,
+    scan_secret_entropy,
     scan_sql_injection,
     scan_dangerous,
     scan_cors_debug,
