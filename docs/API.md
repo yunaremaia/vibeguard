@@ -29,4 +29,4 @@ Default target is `.`.
 
 ## Rules
 
-Registered in `scanner.RULES`: secrets, SQL injection, dangerous functions, CORS/debug, missing auth.
+Registered in `scanner.RULES`: secrets, secret entropy, SQL injection, dangerous functions, CORS/debug, missing auth, insecure design, client-side, LLM output.
