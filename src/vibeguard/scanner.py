@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 from .models import SKIP_PATTERNS, SUPPORTED_EXTENSIONS, ScanResult
+from .rules.client_side import scan_file as scan_client_side
 from .rules.cors_debug import scan_file as scan_cors_debug
 from .rules.dangerous_functions import scan_file as scan_dangerous
 from .rules.insecure_design import scan_file as scan_insecure_design
@@ -19,6 +20,7 @@ RULES = [
     scan_cors_debug,
     scan_missing_auth,
     scan_insecure_design,
+    scan_client_side,
 ]
 
 

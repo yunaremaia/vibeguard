@@ -77,6 +77,7 @@ vibeguard . --min-severity HIGH
 | VGB-023 | HIGH | Insecure defaults (TLS verify off, cookie flags off, bound to 0.0.0.0) |
 | VGB-024 | HIGH | State transitions without a precondition check |
 | VGB-025 | MEDIUM | Responses built without security headers (CSP, HSTS, X-Frame-Options) |
+| VGB-030 | HIGH/MEDIUM | Insecure client-side code (OWASP A05:2021): DOM XSS sinks, document.write, unguarded postMessage, credentials in web storage, target="_blank" without noopener |
 
 ## CI/CD Integration
 
