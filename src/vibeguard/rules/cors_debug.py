@@ -11,9 +11,9 @@ CORS_PATTERNS = [
         r"""(?i)CORS\s*\(.*origins\s*=\s*['"]\*['"]""",
         "CORS configured with wildcard origin (*) — allows any domain to make requests",
     ),
-    # Manual CORS header wildcard
+    # Manual CORS header wildcard (quoted or unquoted)
     (
-        r"""(?i)(?:Access-Control-Allow-Origin|acao)\s*[:=]\s*['"]\*['"]""",
+        r"""(?i)(?:Access-Control-Allow-Origin|acao)\s*[:=]\s*(?:['"]\*['"]|\*)""",
         "Access-Control-Allow-Origin set to wildcard (*)",
     ),
     # JavaScript/Express CORS wildcard

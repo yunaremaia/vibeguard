@@ -101,11 +101,13 @@ def test_generic_token_pattern_requires_eight_characters(tmp_path):
     assert secrets.scan_file(path) == []
 
 
-def test_generic_token_pattern_ignores_urls_and_placeholders(tmp_path):
-    """Values containing slashes/braces are config, not credentials."""
-    for value in ('"https://example.com/a/b"', '"{}"', '"{user_id}"'):
+def test_generic_token_pattern_detects_secrets_with_slashes_and_braces(tmp_path):
+    """Secrets containing /, {, } (URLs, JSON values) must be detected."""
+    for value in ('"https://api.example.com/v1/endpoint"', '"{secret_value}"', '"token/with/slashes"'):
         path = write(tmp_path, "conf.py", f"password = {value}\n")
-        assert secrets.scan_file(path) == [], value
+        findings = secrets.scan_file(path)
+        assert len(findings) == 1, value
+        assert findings[0].rule_id == "VGB-001"
 
 
 # ---------------------------------------------------------------------------
