@@ -1,40 +1,21 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
-# Least privilege: the only write scope needed is the OIDC token that PyPI's
-# trusted publisher exchanges for an upload token.
 permissions:
   id-token: write
 
 jobs:
   pypi-publish:
-    name: Build and upload to PyPI
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # The PyPI project must have this environment configured with a trusted
-    # publisher for this repository + workflow filename, otherwise the upload
-    # is rejected.
     environment: pypi
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1
 
-      - name: Install build tooling
-        run: python -m pip install build twine
-
-      - name: Build sdist and wheel
-        run: python -m build
-
-      # Validates metadata on both artifacts before anything is uploaded.
-      - name: Check artifacts
-        run: twine check dist/*
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
