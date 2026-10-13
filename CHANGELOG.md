@@ -5,6 +5,13 @@ All notable changes to VibeGuard will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Multi-language security rules (#56): Go (`VGB-060`), Rust (`VGB-070`), Java (`VGB-080`), and Ruby (`VGB-090`) pattern detectors, registered in the scanner and gated to their file extensions so each idiom only fires in its own language.
+- README "Supported languages" section documenting what is scanned per language.
+
 ## [0.1.0] - 2026-10-03
 
 First tagged release. `0.1.0` is the version already declared in `pyproject.toml`;

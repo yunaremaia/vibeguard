@@ -24,6 +24,19 @@ AI coding assistants (Claude Code, Codex, Cursor) enable rapid development but o
 
 VibeGuard scans your codebase and flags these issues before they reach production.
 
+## Supported languages
+
+VibeGuard scans source files across these languages and flags the security patterns that are specific to each one:
+
+- **Python** — hardcoded secrets, SQL injection via f-strings/`%`/`.format()`, `eval()` / `exec()` / `os.system()` with user input
+- **JavaScript / TypeScript** — SQL injection via template literals, `eval()` / `new Function()` with user input, wildcard CORS, missing auth on endpoints
+- **Go** — `exec.Command` with `fmt.Sprintf`, `http.Get` SSRF, `database/sql` query/DSN built from formatting (VGB-060)
+- **Rust** — `unsafe` blocks, `std::process::Command` with a formatted argument, `unwrap()`/`expect()` on user input (VGB-070)
+- **Java** — `ObjectInputStream.readObject()` deserialization, `Runtime.exec()` via string concatenation, `Statement.executeQuery()` via concatenation (VGB-080)
+- **Ruby** — `system()` / `eval()` with interpolated input, `constantize()` on user input (VGB-090)
+
+Configuration files (YAML, JSON, TOML, INI, `.env`) are also scanned for hardcoded secrets and debug flags.
+
 ## Install
 
 ```bash

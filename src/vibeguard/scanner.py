@@ -10,6 +10,10 @@ from .rules.dangerous_functions import scan_file as scan_dangerous
 from .rules.insecure_design import scan_file as scan_insecure_design
 from .rules.llm_output import scan_file as scan_llm_output
 from .rules.missing_auth import scan_file as scan_missing_auth
+from .rules.go_rules import scan_file as scan_go
+from .rules.rust_rules import scan_file as scan_rust
+from .rules.java_rules import scan_file as scan_java
+from .rules.ruby_rules import scan_file as scan_ruby
 from .rules.secret_entropy import scan_file as scan_secret_entropy
 from .rules.secrets import scan_file as scan_secrets
 from .rules.sql_injection import scan_file as scan_sql_injection
@@ -25,6 +29,10 @@ RULES = [
     scan_insecure_design,
     scan_client_side,
     scan_llm_output,
+    scan_go,
+    scan_rust,
+    scan_java,
+    scan_ruby,
 ]
 
 
